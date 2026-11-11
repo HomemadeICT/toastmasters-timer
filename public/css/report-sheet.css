@@ -1,0 +1,39 @@
+body { font-family: 'Inter', system-ui, sans-serif; color: #1e293b; background: #eef2f6; margin: 0; padding: 1rem; }
+.toolbar { max-width: 210mm; margin: 0 auto 1rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; background: #fff; padding: .75rem 1rem; border-radius: 8px; }
+.toolbar span { flex: 1; min-width: 14rem; }
+.toolbar button { background: #004165; color: #fff; border: 0; border-radius: 6px; padding: .6rem 1.1rem; font-weight: 600; cursor: pointer; }
+.toolbar a { color: #64748b; }
+.sheet { max-width: 210mm; margin: 0 auto 1.5rem; background: #fff; padding: 12mm; box-shadow: 0 1px 4px rgb(0 0 0 / .15); box-sizing: border-box; }
+.sheet-head { display: flex; align-items: center; gap: 1rem; border-bottom: 2px solid #ccc; padding-bottom: .75rem; margin-bottom: .75rem; }
+.sheet-head img { height: auto; padding-right: 1rem; border-right: 1px solid #ccc; }
+.sheet-head h1 { margin: 0; color: #004165; font-size: 1.5rem; }
+.sheet-title { margin: .25rem 0 0; font-weight: 600; }
+.sheet-sub { margin: .1rem 0 0; color: #555; font-size: .9rem; }
+.meta { display: grid; grid-template-columns: 1fr 1fr; gap: .25rem 1.5rem; font-size: .9rem; margin-bottom: .75rem; }
+table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+th, td { border: 1px solid #000; padding: .35rem .5rem; text-align: center; }
+th { background: #f0f4f8; }
+.left { text-align: left; }
+.section-row td { background: #ddeaf5; color: #003050; font-weight: 600; text-align: left; font-size: .8rem; }
+.actual { font-weight: 700; }
+.badge { display: inline-block; padding: .05rem .45rem; border-radius: 4px; border: 1px solid; font-weight: 700; font-size: .75rem; white-space: nowrap; }
+.badge-pass { color: #047857; border-color: #047857; background: #ecfdf5; }
+.badge-grace { color: #92400e; border-color: #b45309; background: #fffbeb; }
+.badge-fail { color: #b91c1c; border-color: #b91c1c; background: #fef2f2; }
+.badge-pass::before { content: "\2713 "; }
+.badge-grace::before { content: "~ "; }
+.badge-fail::before { content: "\2717 "; }
+small { display: block; color: #555; font-size: .7rem; }
+.empty { color: #64748b; }
+.foot { font-size: .7rem; color: #555; margin: .6rem 0 0; }
+
+@media print {
+    @page { size: A4; margin: 10mm; }
+    body { background: #fff; padding: 0; }
+    .no-print { display: none !important; }
+    .sheet { box-shadow: none; margin: 0; padding: 0; max-width: none; page-break-after: always; break-after: page; }
+    .sheet:last-of-type { page-break-after: auto; break-after: auto; }
+    .badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .section-row td, th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+@media (max-width: 600px) { .sheet { padding: .75rem; } .meta { grid-template-columns: 1fr; } table { font-size: .75rem; } th, td { padding: .25rem; } }

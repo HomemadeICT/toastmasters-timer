@@ -5,7 +5,7 @@ header_remove('X-Robots-Tag');
 header('Content-Type: application/xml; charset=utf-8');
 
 $base = site_base_url();
-$urls = [['blog.php', null], ['about.php', null], ['contact.php', null]];
+$urls = [['', null], ['blog.php', null], ['about.php', null], ['contact.php', null]];
 foreach (blog_posts() as $slug => $post) {
     $urls[] = ['blog.php?post=' . urlencode($slug), $post['date']];
 }

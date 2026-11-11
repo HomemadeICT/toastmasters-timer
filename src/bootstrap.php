@@ -13,6 +13,9 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/validate.php';
 require_once __DIR__ . '/domain.php';
 require_once __DIR__ . '/site.php';
+require_once __DIR__ . '/limits.php';
+require_once __DIR__ . '/export.php';
+require_once __DIR__ . '/maintenance.php';
 
 if (PHP_SAPI !== 'cli') {
     set_exception_handler(function (Throwable $e): void {

@@ -48,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="container">
+        <a href="./" style="color:var(--text-muted);text-decoration:none;font-weight:600;">← Back to overview</a>
         <header>
             <h1>Toastmasters Timer</h1>
             <p>Create your account</p>
@@ -69,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="password" id="password2" name="password2" required autocomplete="new-password">
                 </div>
                 <button type="submit" class="btn btn-primary">Create account</button>
+                <p class="usage-note">To keep this free service fast, meetings are removed <?php echo retention_days(); ?> days after their date. Your account stays.</p>
                 <p style="margin-top:1rem;">Already registered? <a href="login.php">Sign in</a></p>
             </form>
         </section>

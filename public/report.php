@@ -59,52 +59,8 @@ $stmt->bind_param("i", $id);
 $stmt->execute();
 $speakers_result = $stmt->get_result();
 
-$speakerList = [];
-while ($row = $speakers_result->fetch_assoc()) {
-    $row['actualSec'] = time_to_sec($row['final_time']);
-    $row['is_disqualified'] = false;
-    $row['diffText'] = '';
-    $row['grace_status'] = ''; // 'strict', 'grace', or ''
-
-    if ($row['final_time'] && $row['role'] !== 'Round Robin') {
-        $grade = grade_time($row['role'], (int)$row['min_time'], (int)$row['max_time'], $row['actualSec']);
-        $row['effective_lower'] = $grade['lower'];
-        $row['effective_upper'] = $grade['upper'];
-        $row['is_disqualified'] = $grade['disqualified'];
-        $row['grace_status'] = $grade['status'];
-        $row['diffText'] = $grade['text'];
-    }
-    $speakerList[] = $row;
-}
-
-$categoryLabels = ['ps_speaker' => 'SP', 'tt_speaker' => 'TT', 'ps_eval' => 'EV', 'tt_eval' => 'TE', 'other' => ''];
-
-// ── Report Grouping & Indexing ──────────────────────────────────────────────
-$categoryOrder  = ['ps_speaker' => 0, 'tt_speaker' => 1, 'ps_eval' => 2, 'tt_eval' => 3, 'other' => 4];
-
-foreach ($speakerList as &$s) {
-    $s['report_category'] = classify_speaker($s['role']);
-}
-unset($s);
-
-// Sort: category group → qualified before DQ → original sort_order
-usort($speakerList, function($a, $b) use ($categoryOrder) {
-    $catCmp = $categoryOrder[$a['report_category']] <=> $categoryOrder[$b['report_category']];
-    if ($catCmp !== 0) return $catCmp;
-    if ($a['is_disqualified'] !== $b['is_disqualified']) return $a['is_disqualified'] ? 1 : -1;
-    return $a['sort_order'] <=> $b['sort_order'];
-});
-
-// Assign sequential index numbers within each category (SP1, SP2, TT1, EV1…)
-$categoryCounters = [];
-foreach ($speakerList as &$s) {
-    $cat = $s['report_category'];
-    if (!isset($categoryCounters[$cat])) $categoryCounters[$cat] = 0;
-    $categoryCounters[$cat]++;
-    $lbl = $categoryLabels[$cat];
-    $s['report_index'] = $lbl ? $lbl . $categoryCounters[$cat] : '';
-}
-unset($s);
+$speakerList = prepare_report_speakers($speakers_result->fetch_all(MYSQLI_ASSOC));
+$categoryLabels = REPORT_CATEGORY_LABELS;
 ?>
 <!DOCTYPE html>
 <html lang="en">

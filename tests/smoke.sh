@@ -13,7 +13,11 @@ expect() { # label actual expected
 code() { C -o /dev/null -w '%{http_code}' "$@"; }
 EMAIL_A="a$RANDOM$RANDOM@example.test"; EMAIL_B="b$RANDOM$RANDOM@example.test"; PW=longenoughpw1
 
-expect "unauthenticated index redirects" "$(code "$B/index.php")" 302
+expect "signed-out home is the landing page" "$(code "$B/")" 200
+C "$B/" | grep -q 'Create free account' && echo "ok   landing has sign-up call to action" || { echo "FAIL landing CTA"; fail=1; }
+C -I "$B/" | grep -qi '^x-robots-tag: index' && echo "ok   landing indexable" || { echo "FAIL landing robots header"; fail=1; }
+expect "signed-out meeting page redirects" "$(code "$B/meeting.php?id=1")" 302
+expect "signed-out delete page redirects" "$(code "$B/delete_meeting.php?id=1")" 302
 for p in src/db.php sql/schema.sql config.php Dockerfile README.md .git/config; do
   r=$(code "$B/$p"); [[ $r = 403 || $r = 404 ]] && echo "ok   $p not served ($r)" || { echo "FAIL $p served ($r)"; fail=1; }
 done
@@ -61,6 +65,17 @@ for p in login.php blog.php about.php contact.php; do expect "public $p without 
 C "$B/login.php" | grep -q 'class="site-nav"' && echo "ok   login page has navbar" || { echo "FAIL login navbar"; fail=1; }
 C "$B/login.php" | grep -q 'by <strong>TheekMind</strong>' && echo "ok   login page says by TheekMind" || { echo "FAIL by TheekMind"; fail=1; }
 C -b $W/a.jar "$B/index.php" | grep -q 'class="site-nav"' && { echo "FAIL navbar leaked into app page"; fail=1; } || echo "ok   no navbar inside the app"
+C -b $W/a.jar "$B/index.php" | grep -q 'of [0-9]* used' && echo "ok   dashboard shows the usage meter" || { echo "FAIL usage meter"; fail=1; }
+C -b $W/a.jar "$B/index.php" | grep -q 'Create free account' && { echo "FAIL signed-in user sees landing"; fail=1; } || echo "ok   signed-in home is the dashboard"
+expect "delete page shows confirmation for owner" "$(code -b $W/a.jar "$B/delete_meeting.php?id=$M")" 200
+expect "other user cannot open delete page" "$(code -b $W/b.jar "$B/delete_meeting.php?id=$M")" 404
+expect "delete without csrf rejected" "$(code -b $W/a.jar -d "id=$M" "$B/delete_meeting.php")" 403
+expect "export needs POST" "$(code -b $W/a.jar "$B/export.php")" 405
+expect "export without csrf rejected" "$(code -b $W/a.jar -d "format=csv&ids[]=$M" "$B/export.php")" 403
+expect "other user cannot export my meeting" "$(code -b $W/b.jar -c $W/b.jar --data-urlencode "csrf=$TB" -d "format=csv&ids[]=$M" "$B/export.php")" 400
+C -b $W/a.jar --data-urlencode "csrf=$TA" -d "format=csv&ids[]=$M" "$B/export.php" | grep -q 'Meeting,Date' && echo "ok   owner can export CSV" || { echo "FAIL CSV export"; fail=1; }
+C -b $W/a.jar --data-urlencode "csrf=$TA" -d "format=print&ids[]=$M" "$B/export.php" | grep -q 'class="sheet"' && echo "ok   owner can open print reports" || { echo "FAIL print export"; fail=1; }
+C -b $W/a.jar --data-urlencode "csrf=$TA" -d "ids[]=$M" "$B/manage_meetings.php" | grep -q 'Review before deleting' && echo "ok   delete review page" || { echo "FAIL review page"; fail=1; }
 for slug in $(C "$B/blog.php" | grep -oE 'blog.php\?post=[a-z0-9-]+' | sort -u | cut -d= -f2); do
   expect "blog post $slug" "$(code "$B/blog.php?post=$slug")" 200
 done
@@ -85,5 +100,7 @@ C -b $W/l.jar -c $W/l.jar --data-urlencode "csrf=$T" -d "email=$EMAIL_A&password
 # The throttle test leaves failures recorded against this IP; clear them so real logins aren't blocked.
 if command -v docker >/dev/null && [ -f "$(dirname "$0")/../docker-compose.yml" ]; then
   (cd "$(dirname "$0")/.." && docker compose exec -T web php -r 'require "/var/www/html/src/bootstrap.php"; db()->query("DELETE FROM login_attempts");' >/dev/null 2>&1)
+  # Remove the throwaway accounts (meetings and speakers cascade) so repeated runs don't pile up test data.
+  (cd "$(dirname "$0")/.." && docker compose exec -T -e EA="$EMAIL_A" -e EB="$EMAIL_B" web php -r 'require "/var/www/html/src/bootstrap.php"; $s=db()->prepare("DELETE FROM users WHERE email IN (?, ?)"); $a=getenv("EA"); $b=getenv("EB"); $s->bind_param("ss",$a,$b); $s->execute();' >/dev/null 2>&1)
 fi
 exit $fail

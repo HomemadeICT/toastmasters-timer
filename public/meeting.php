@@ -81,6 +81,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
     $conn = db();
     if (isset($_POST['add_speaker'])) {
+        if (count_meeting_speakers($id) >= max_speakers()) {
+            flash('warning', 'This meeting has reached its limit of ' . max_speakers() . ' speakers. Remove one to add another.');
+            redirect("meeting.php?id=$id");
+        }
         [$name, $role, $eventTypeId, $min, $target, $max] = speaker_form_input($id);
         $stmt = $conn->prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 FROM speakers WHERE meeting_id = ?');
         $stmt->bind_param('i', $id);
@@ -120,6 +124,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     redirect("meeting.php?id=$id");
 }
+
+$speakerCount = count_meeting_speakers($id);
+$speakersFull = $speakerCount >= max_speakers();
+$expiresOn = meeting_expires_on($meeting['date']);
 
 // Fetch speakers
 $stmt = db()->prepare("SELECT * FROM speakers WHERE meeting_id = ? ORDER BY sort_order ASC, id ASC");
@@ -173,14 +181,14 @@ function renderBuiltinPresets($presets, $selected_name = '') {
     }
     $html = '';
     foreach ($groups as $group_name => $items) {
-        $html .= '<optgroup label="' . htmlspecialchars($group_name) . '">';
+        $html .= '<optgroup label="' . h($group_name) . '">';
         foreach ($items as $p) {
-            $label = htmlspecialchars($p['name']);
+            $label = h($p['name']);
             $time_display = floor($p['min']/60) . ':' . str_pad($p['min']%60, 2, '0', STR_PAD_LEFT) . ' - '
                           . floor($p['target']/60) . ':' . str_pad($p['target']%60, 2, '0', STR_PAD_LEFT) . ' - '
                           . floor($p['max']/60) . ':' . str_pad($p['max']%60, 2, '0', STR_PAD_LEFT);
             $selected = ($selected_name === $p['name']) ? ' selected' : '';
-            $html .= '<option value="preset_' . htmlspecialchars($p['name']) . '"'
+            $html .= '<option value="preset_' . h($p['name']) . '"'
                    . ' data-min="' . $p['min'] . '"'
                    . ' data-target="' . $p['target'] . '"'
                    . ' data-max="' . $p['max'] . '"'
@@ -199,7 +207,7 @@ function renderBuiltinPresets($presets, $selected_name = '') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-        <?php echo htmlspecialchars($meeting['name']); ?> - Toastmasters Timer
+        <?php echo h($meeting['name']); ?> - Toastmasters Timer
     </title>
     <?php echo favicon_links(); ?>
     <link rel="stylesheet" href="<?php echo h(asset('css/fonts.css')); ?>">
@@ -210,19 +218,22 @@ function renderBuiltinPresets($presets, $selected_name = '') {
 
 <body class="zoom-global" data-meeting-id="<?php echo (int)$id; ?>">
     <div class="container">
+        <?php render_flash(); ?>
         <header>
             <a href="index.php" class="btn-back"
                 style="text-decoration:none; color: var(--text-muted); font-weight:600;">← Back to Meetings</a>
             <h1 style="margin-top:1rem;">
-                <?php echo htmlspecialchars($meeting['name']); ?>
+                <?php echo h($meeting['name']); ?>
             </h1>
             <p>
                 <?php echo date('l, j F Y', strtotime($meeting['date'])); ?> |
-                <?php echo htmlspecialchars($meeting['location']); ?>
+                <?php echo h($meeting['location']); ?>
             </p>
+            <p class="expiry-note">Kept until <?php echo h(date('j M Y', strtotime($expiresOn))); ?>, then removed automatically.
+                <a href="delete_meeting.php?id=<?php echo $id; ?>">Delete now</a></p>
             <?php if ($meeting['theme']): ?>
                 <p style="margin-top:0.5rem; font-style:italic;">Theme: "
-                    <?php echo htmlspecialchars($meeting['theme']); ?>"
+                    <?php echo h($meeting['theme']); ?>"
                 </p>
             <?php endif; ?>
 
@@ -231,7 +242,11 @@ function renderBuiltinPresets($presets, $selected_name = '') {
                     style="background:var(--secondary); flex:1; min-width:150px; text-align:center;">Generate Report</a>
                 <a href="#editMeeting" class="btn" style="background:#e2e8f0; flex:1; min-width:150px; text-align:center;">Edit Meeting</a>
                 <a href="cards.php?id=<?php echo $id; ?>" class="btn" style="background:var(--accent); color:var(--primary); flex:1; min-width:150px; text-align:center;">Manual Cards</a>
-                <a href="#addSpeaker" class="btn btn-primary" style="flex:1; min-width:150px; text-align:center;">Add Speaker</a>
+                <?php if ($speakersFull): ?>
+                    <span class="btn btn-disabled" style="flex:1; min-width:150px;" title="Speaker limit reached">Speaker limit reached</span>
+                <?php else: ?>
+                    <a href="#addSpeaker" class="btn btn-primary" style="flex:1; min-width:150px; text-align:center;">Add Speaker</a>
+                <?php endif; ?>
                 <a href="#manageEvents" class="btn" style="background:#a78bfa; color:white; flex:1; min-width:150px; text-align:center;">Manage Events</a>
             </div>
         </header>
@@ -244,7 +259,7 @@ function renderBuiltinPresets($presets, $selected_name = '') {
 <?php echo csrf_field(); ?>
                     <div class="form-group">
                         <label>Meeting Name</label>
-                        <input type="text" name="m_name" value="<?php echo htmlspecialchars($meeting['name']); ?>" required>
+                        <input type="text" name="m_name" value="<?php echo h($meeting['name']); ?>" required>
                     </div>
                     <div class="form-group">
                         <label>Date</label>
@@ -252,20 +267,20 @@ function renderBuiltinPresets($presets, $selected_name = '') {
                     </div>
                     <div class="form-group">
                         <label>Location</label>
-                        <input type="text" name="m_location" value="<?php echo htmlspecialchars($meeting['location']); ?>">
+                        <input type="text" name="m_location" value="<?php echo h($meeting['location']); ?>">
                     </div>
                     <div class="form-group">
                         <label>Theme</label>
-                        <input type="text" name="m_theme" value="<?php echo htmlspecialchars($meeting['theme']); ?>">
+                        <input type="text" name="m_theme" value="<?php echo h($meeting['theme']); ?>">
                     </div>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>TMOD</label>
-                            <input type="text" name="m_tmod" value="<?php echo htmlspecialchars($meeting['tmod']); ?>">
+                            <input type="text" name="m_tmod" value="<?php echo h($meeting['tmod']); ?>">
                         </div>
                         <div class="form-group">
                             <label>Timer</label>
-                            <input type="text" name="m_timer" value="<?php echo htmlspecialchars($meeting['timer_name']); ?>">
+                            <input type="text" name="m_timer" value="<?php echo h($meeting['timer_name']); ?>">
                         </div>
                     </div>
                     <div class="form-actions">
@@ -277,16 +292,19 @@ function renderBuiltinPresets($presets, $selected_name = '') {
         </div>
 
         <section class="speakers">
-            <h2>Speakers</h2>
+            <h2>Speakers <span class="count-note"><?php echo (int)$speakerCount; ?> of <?php echo max_speakers(); ?></span></h2>
+            <?php if ($speakersFull): ?>
+                <div class="notice notice-warning" role="alert">This meeting has reached its limit of <?php echo max_speakers(); ?> speakers. Remove a speaker you no longer need to add another.</div>
+            <?php endif; ?>
             <div id="speaker-list">
                 <?php while ($s = $speakers->fetch_assoc()): ?>
                     <div class="speaker-item">
                         <div class="speaker-info">
                             <h4>
-                                <?php echo htmlspecialchars($s['name']); ?>
+                                <?php echo h($s['name']); ?>
                             </h4>
                             <div class="role">
-                                <?php echo htmlspecialchars($s['role']); ?>
+                                <?php echo h($s['role']); ?>
                             </div>
                             <div class="time-limits">
                                 Limits:
@@ -310,7 +328,7 @@ function renderBuiltinPresets($presets, $selected_name = '') {
 <?php echo csrf_field(); ?>
                                     <input type="hidden" name="speaker_id" value="<?php echo (int)$s['id']; ?>">
                                     <label style="margin:0; font-size:0.7rem;">Order:</label>
-                                    <input type="number" name="sort_order" value="<?php echo $s['sort_order']; ?>"
+                                    <input type="number" name="sort_order" value="<?php echo (int)$s['sort_order']; ?>"
                                         style="width:50px; padding:0.25rem; font-size:0.8rem; text-align:center;">
                                     <button type="submit" name="update_order" class="btn"
                                         style="padding:0.25rem 0.5rem; font-size:0.7rem; background:#e2e8f0;">SET</button>
@@ -333,12 +351,12 @@ function renderBuiltinPresets($presets, $selected_name = '') {
                                 <input type="hidden" name="speaker_id" value="<?php echo (int)$s['id']; ?>">
                                 <div class="form-group">
                                     <label>Name</label>
-                                    <input type="text" name="name" value="<?php echo htmlspecialchars($s['name']); ?>"
+                                    <input type="text" name="name" value="<?php echo h($s['name']); ?>"
                                         required>
                                 </div>
                                 <div class="form-group">
                                     <label>Role</label>
-                                    <input type="text" name="role" value="<?php echo htmlspecialchars($s['role']); ?>"
+                                    <input type="text" name="role" value="<?php echo h($s['role']); ?>"
                                         required>
                                 </div>
                                 <div class="form-group">
@@ -350,12 +368,12 @@ function renderBuiltinPresets($presets, $selected_name = '') {
                                             $event_types->data_seek(0);
                                             while ($et = $event_types->fetch_assoc()): 
                                         ?>
-                                            <option value="<?php echo $et['id']; ?>" 
+                                            <option value="<?php echo (int)$et['id']; ?>" 
                                                 data-min="<?php echo $et['min_time']; ?>"
                                                 data-target="<?php echo $et['target_time']; ?>"
                                                 data-max="<?php echo $et['max_time']; ?>"
                                                 <?php echo ($s['event_type_id'] == $et['id']) ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($et['name']); ?> 
+                                                <?php echo h($et['name']); ?> 
                                                 (<?php echo floor($et['min_time']/60); ?>:<?php echo str_pad($et['min_time']%60, 2, '0', STR_PAD_LEFT); ?> - 
                                                 <?php echo floor($et['target_time']/60); ?>:<?php echo str_pad($et['target_time']%60, 2, '0', STR_PAD_LEFT); ?> - 
                                                 <?php echo floor($et['max_time']/60); ?>:<?php echo str_pad($et['max_time']%60, 2, '0', STR_PAD_LEFT); ?>)
@@ -480,11 +498,11 @@ function renderBuiltinPresets($presets, $selected_name = '') {
                                 $event_types->data_seek(0);
                                 while ($et = $event_types->fetch_assoc()): 
                             ?>
-                                <option value="<?php echo $et['id']; ?>"
+                                <option value="<?php echo (int)$et['id']; ?>"
                                     data-min="<?php echo $et['min_time']; ?>"
                                     data-target="<?php echo $et['target_time']; ?>"
                                     data-max="<?php echo $et['max_time']; ?>">
-                                    <?php echo htmlspecialchars($et['name']); ?> 
+                                    <?php echo h($et['name']); ?> 
                                     (<?php echo floor($et['min_time']/60); ?>:<?php echo str_pad($et['min_time']%60, 2, '0', STR_PAD_LEFT); ?> - 
                                     <?php echo floor($et['target_time']/60); ?>:<?php echo str_pad($et['target_time']%60, 2, '0', STR_PAD_LEFT); ?> - 
                                     <?php echo floor($et['max_time']/60); ?>:<?php echo str_pad($et['max_time']%60, 2, '0', STR_PAD_LEFT); ?>)

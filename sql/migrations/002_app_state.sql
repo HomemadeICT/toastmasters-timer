@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS app_state (
+    k VARCHAR(32) PRIMARY KEY,
+    v VARCHAR(64) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO app_state (k, v) VALUES ('last_cleanup', '2000-01-01 00:00:00');

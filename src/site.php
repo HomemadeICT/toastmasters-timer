@@ -4,7 +4,7 @@ declare(strict_types=1);
 const SITE_URL = 'https://theekmind.com';
 const SITE_LINKEDIN_URL = 'https://www.linkedin.com/in/theekshana-prabodha/';
 const SITE_BLOG_URL = 'https://blogs.theekmind.com';
-const SITE_CONTACT_EMAIL = 'theekmind@gmail.com';
+const SITE_CONTACT_EMAIL = 'homemadeict@gmail.com';
 
 function site_base_url(): string
 {
@@ -37,7 +37,7 @@ function site_nav(string $active = ''): void
     ];
     ?>
     <nav class="site-nav" aria-label="TheekMind">
-        <a class="site-nav-brand" href="login.php">
+        <a class="site-nav-brand" href="./">
             <img src="<?php echo h(asset('img/theekmind.png')); ?>" alt="" width="32" height="32">
             <span>TheekMind Timer</span>
         </a>
@@ -46,6 +46,10 @@ function site_nav(string $active = ''): void
             <?php foreach ($links as $key => [$href, $label]): ?>
                 <li><a href="<?php echo h($href); ?>"<?php echo $key === $active ? ' aria-current="page"' : ''; ?>><?php echo h($label); ?></a></li>
             <?php endforeach; ?>
+            <?php if (current_user_id() === null): ?>
+                <li><a href="login.php"<?php echo $active === 'login' ? ' aria-current="page"' : ''; ?>>Sign in</a></li>
+                <li><a class="site-nav-cta" href="register.php">Create account</a></li>
+            <?php endif; ?>
         </ul>
     </nav>
     <?php
@@ -57,7 +61,7 @@ function site_head(string $title, string $description = '', string $canonical = 
     $full = $title . ' - Toastmasters Timer by TheekMind';
     if ($canonical !== '') {
         header('X-Robots-Tag: index, follow');
-        $url = site_base_url() . '/' . $canonical;
+        $url = site_base_url() . '/' . ($canonical === '/' ? '' : $canonical);
         // Social crawlers don't render SVG, so Open Graph uses the PNG twin of each cover.
         $img = site_base_url() . '/' . ($image !== '' ? preg_replace('/\.svg$/', '.png', $image) : 'icon-512.png');
     }
@@ -93,7 +97,7 @@ function site_footer(): void
     <footer class="site-footer">
         <p>Toastmasters Timer, built by <a href="<?php echo h(SITE_URL); ?>" rel="noopener">TheekMind</a>.
         <a href="<?php echo h(SITE_LINKEDIN_URL); ?>" rel="noopener">LinkedIn</a> ·
-        <a href="login.php">Sign in</a></p>
+        <a href="login.php">Sign in</a> · <a href="register.php">Create account</a></p>
         <p class="site-footer-note">An independent tool. Not affiliated with or endorsed by Toastmasters International.</p>
     </footer>
     <?php

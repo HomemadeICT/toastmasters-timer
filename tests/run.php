@@ -5,6 +5,10 @@ define('APP_ROOT', dirname(__DIR__));
 require APP_ROOT . '/src/security.php';
 require APP_ROOT . '/src/validate.php';
 require APP_ROOT . '/src/domain.php';
+require APP_ROOT . '/src/limits.php';
+require APP_ROOT . '/src/maintenance.php';
+require APP_ROOT . '/src/export.php';
+function app_config(): array { return []; }
 
 $failures = 0;
 function check(string $label, mixed $actual, mixed $expected): void
@@ -61,6 +65,49 @@ check('grade table topic no lower grace', grade_time('Table Topic', 60, 120, 40)
 check('grade bounds', [grade_time('Prepared Speech', 300, 420, 360)['lower'], grade_time('Prepared Speech', 300, 420, 360)['upper']], [270, 450]);
 
 check('grade lower bound never negative', grade_time('Prepared Speech', 10, 60, 5)['lower'], 0);
+
+// retention and limits
+check('expires after 30 days', meeting_expires_on('2026-11-11'), '2026-12-11');
+check('expiry custom days', meeting_expires_on('2026-01-31', 1), '2026-02-01');
+check('days_until future', days_until('2026-12-11', new DateTimeImmutable('2026-12-04')), 7);
+check('days_until past', days_until('2026-12-01', new DateTimeImmutable('2026-12-04')), -3);
+check('usage ok', usage_state(15, 20), 'ok');
+check('usage warn at 80%', usage_state(16, 20), 'warn');
+check('usage full at cap', usage_state(20, 20), 'full');
+check('usage full over cap', usage_state(25, 20), 'full');
+check('defaults', [retention_days(), max_meetings(), max_speakers()], [30, 20, 40]);
+
+// export: grading, ordering, badges, CSV safety
+$sp = fn(array $o) => $o + ['id' => 1, 'sort_order' => 1, 'final_time' => '', 'min_time' => 300, 'target_time' => 360, 'max_time' => 420, 'name' => 'N', 'role' => 'Prepared Speech'];
+$rows = prepare_report_speakers([
+    $sp(['id' => 1, 'name' => 'Late', 'final_time' => '9:00', 'sort_order' => 1]),
+    $sp(['id' => 2, 'name' => 'Good', 'final_time' => '6:10', 'sort_order' => 2]),
+    $sp(['id' => 3, 'name' => 'Grace', 'final_time' => '7:20', 'sort_order' => 3]),
+    $sp(['id' => 4, 'name' => 'Eval', 'role' => 'Evaluator', 'min_time' => 120, 'target_time' => 150, 'max_time' => 180, 'final_time' => '2:30', 'sort_order' => 4]),
+    $sp(['id' => 5, 'name' => 'TT', 'role' => 'Table Topic', 'min_time' => 60, 'target_time' => 90, 'max_time' => 120, 'final_time' => '1:30', 'sort_order' => 5]),
+    $sp(['id' => 6, 'name' => 'Untimed', 'sort_order' => 6]),
+]);
+check('order: qualified before disqualified, speakers then evals', array_column($rows, 'name'), ['Good', 'Grace', 'Untimed', 'Late', 'TT', 'Eval']);
+check('index numbering', array_column($rows, 'report_index'), ['SP1', 'SP2', 'SP3', 'SP4', 'TT1', 'EV1']);
+check('badge qualified', result_badge($rows[0]), 'QUALIFIED');
+check('badge grace', str_starts_with(result_badge($rows[1]), 'QUALIFIED (GRACE'), true);
+check('badge disqualified', str_starts_with(result_badge($rows[3]), 'DISQUALIFIED'), true);
+check('badge untimed empty', result_badge($rows[2]), '');
+check('badge classes', array_map('result_badge_class', array_slice($rows, 0, 4)), ['pass', 'grace', '', 'fail']);
+check('csv formula guard =', csv_cell('=cmd|x'), "'=cmd|x");
+check('csv formula guard +', csv_cell('+1'), "'+1");
+check('csv formula guard @', csv_cell('@SUM'), "'@SUM");
+check('csv plain text untouched', csv_cell('Nimali'), 'Nimali');
+check('csv null', csv_cell(null), '');
+$meeting = ['name' => 'M', 'date' => '2026-11-11', 'location' => '', 'theme' => '', 'tmod' => '', 'timer_name' => ''];
+$csv = csv_rows_for_meeting($meeting, $rows);
+check('csv row count', count($csv), 6);
+check('csv row width matches header', count($csv[0]), count(csv_header()));
+check('csv disqualified flag', $csv[3][14], 'yes');
+$_POST = ['ids' => ['3', '3', 'x', '-1', '0', '7']];
+check('posted ids clean and unique', posted_meeting_ids(), [3, 7]);
+$_POST = ['ids' => 'nope'];
+check('posted ids non-array', posted_meeting_ids(), []);
 
 // blog content integrity
 require_once APP_ROOT . '/src/site.php';

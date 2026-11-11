@@ -149,6 +149,10 @@ bin/package-infinityfree.sh        # builds dist/infinityfree/{htdocs,database}
 
 `.htaccess` blocks `src/`, `config.php` and the other non-public folders, and the packager leaves `sql/`, docs and tests out. `bin/migrate.php` needs a shell, so it is for upgrading local or VPS installs only.
 
+### Limits and retention
+
+Free hosts have small quotas, so the app tidies itself. Meetings are removed 30 days after their meeting date (accounts stay), each user can hold 20 meetings with up to 40 speakers each, and users see a usage meter on their dashboard with one-click deletion when they are near or at a limit. There is no cron on these hosts: the first request after 24 hours runs the cleanup (`src/maintenance.php`). Users choose what to delete: tick meetings on the dashboard, then export CSV or print-ready reports (use Print, Save as PDF) with Qualified/Grace/Disqualified badges, review, and delete. Dashboard warnings appear 7 days before automatic removal. Tune `retention_days`, `max_meetings` and `max_speakers` in `config.php`. Existing databases need `sql/migrations/002_app_state.sql` (phpMyAdmin import, or `php bin/migrate.php` where you have a shell).
+
 ## Tests
 
 ```bash

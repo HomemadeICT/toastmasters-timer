@@ -123,3 +123,27 @@ function asset(string $path): string
     $file = APP_ROOT . '/public/' . $path;
     return $path . '?v=' . (is_file($file) ? filemtime($file) : 0);
 }
+
+function flash(string $type, string $message): void
+{
+    $_SESSION['flash'] = ['type' => $type, 'message' => $message];
+}
+
+/** Returns the pending flash message once, then clears it. */
+function take_flash(): ?array
+{
+    $f = $_SESSION['flash'] ?? null;
+    unset($_SESSION['flash']);
+    return is_array($f) ? $f : null;
+}
+
+function render_flash(): void
+{
+    $f = take_flash();
+    if ($f === null) {
+        return;
+    }
+    $type = in_array($f['type'], ['success', 'warning', 'danger'], true) ? $f['type'] : 'success';
+    $role = $type === 'success' ? 'status' : 'alert';
+    echo '<div class="notice notice-' . $type . '" role="' . $role . '">' . h((string)$f['message']) . '</div>';
+}

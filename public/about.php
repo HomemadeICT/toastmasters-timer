@@ -19,6 +19,7 @@ site_head('About us', 'Who builds the Toastmasters Timer and why.', 'about.php')
                 <li>A roster you can reorder during the meeting.</li>
                 <li>An A4 timing report with qualified, grace and disqualified results.</li>
                 <li>Your own account: you only ever see your own meetings.</li>
+                <li>Automatic tidy-up: meetings are removed <?php echo retention_days(); ?> days after their date to keep the free service fast. Accounts are kept, and you can delete meetings yourself any time.</li>
             </ul>
             <h2>Where to find more</h2>
             <p>Read <a href="blog.php">the blogs</a> for role-by-role timing guides, visit <a href="<?php echo h(SITE_URL); ?>" rel="noopener">theekmind.com</a>, connect with me on <a href="<?php echo h(SITE_LINKEDIN_URL); ?>" rel="noopener">LinkedIn</a>, or <a href="contact.php">get in touch</a>.</p>

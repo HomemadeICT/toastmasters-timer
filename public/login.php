@@ -51,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="site">
     <?php site_nav(); ?>
     <div class="container login-wrap">
+        <a class="back-link" href="./">← Back to overview</a>
         <header>
             <h1>Toastmasters Timer</h1>
             <p>Sign in to your meetings</p>

@@ -1,0 +1,318 @@
+:root {
+    --primary: #004165; /* Toastmasters Blue */
+    --secondary: #772432; /* Toastmasters Maroon */
+    --accent: #F2DF74; /* Toastmasters Yellow */
+    --gray: #A9B2B1; /* Toastmasters Gray */
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --radius: 12px;
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    
+    /* Zoom Presets Variables */
+    --zoom-timer: 1;
+    --zoom-meta: 1;
+    --zoom-logo: 1;
+    --zoom-global: 1;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 2rem 1rem;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: -0.025em;
+    margin-bottom: 0.5rem;
+}
+
+header p {
+    color: var(--text-muted);
+    font-size: 1.125rem;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-muted);
+}
+
+input, select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.2s;
+    background-color: #fff;
+    color: var(--text);
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 65, 101, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.form-actions > * {
+    flex: 1;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    text-decoration: none;
+    text-align: center;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #00304a;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #e2e8f0;
+    color: var(--text);
+}
+
+.btn-secondary:hover {
+    background: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background: var(--secondary);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #5a1b26;
+    transform: translateY(-1px);
+}
+
+.meeting-list .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.meeting-card {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.meeting-card:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.meeting-info h3 {
+    color: var(--primary);
+    margin-bottom: 0.25rem;
+}
+
+.meeting-info .date {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.meeting-info .theme {
+    margin-top: 0.5rem;
+    font-style: italic;
+    color: var(--secondary);
+}
+
+.arrow {
+    font-size: 1.5rem;
+    color: var(--gray);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .form-grid, .form-grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Toastmasters Official Card Frame Overlay */
+.tm-frame {
+    position: fixed;
+    top: 40px;
+    bottom: 40px;
+    left: 40px;
+    right: 40px;
+    border: 20px solid rgba(255, 255, 255, 0.3);
+    display: none;
+    pointer-events: none;
+    z-index: 999;
+}
+
+body.green .tm-frame, body.yellow .tm-frame, body.red .tm-frame,
+.bg-green .tm-frame, .bg-yellow .tm-frame, .bg-red .tm-frame {
+    display: block;
+}
+
+.tm-logo-container {
+    position: absolute;
+    top: -65px;
+    left: 50px;
+    display: flex;
+    align-items: center;
+}
+
+.tm-logo {
+    width: 120px;
+    height: auto;
+    z-index: 1010;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+.tm-card-label {
+    background-color: white;
+    color: #1e293b;
+    padding: 6px 120px 4px 15px;
+    font-weight: 800;
+    font-size: 1.6rem;
+    letter-spacing: 1px;
+    margin-left: -10px;
+    z-index: 1000;
+    text-transform: uppercase;
+}
+
+/* Persistent Global OBS Shift */
+body.obs-safe-mode {
+    padding-right: 33vw !important;
+    transition: padding-right 0.3s ease;
+}
+
+.obs-global-toggle { 
+    position: fixed; 
+    bottom: 20px; 
+    right: 20px; 
+    z-index: 10000; 
+    background: #000000 !important; 
+    color: #ffffff !important; 
+    padding: 10px 20px; 
+    border-radius: 8px; 
+    border: 2px solid #ffffff; 
+    font-size: 14px; 
+    font-weight: 800; 
+    cursor: pointer; 
+    transition: all 0.2s; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    text-transform: uppercase;
+    font-family: 'Outfit', sans-serif;
+}
+
+.obs-global-toggle:hover { 
+    background: #333333 !important; 
+    transform: scale(1.05);
+}
+
+@media print {
+    .obs-global-toggle { display: none !important; }
+    body.obs-safe-mode { padding-right: 0 !important; }
+}
+
+/* Zoom Scaling Rules */
+.zoom-timer {
+    transform: scale(var(--zoom-timer));
+    transform-origin: center center;
+}
+
+.zoom-meta {
+    transform: scale(var(--zoom-meta));
+    transform-origin: center center;
+}
+
+.zoom-logo {
+    transform: scale(var(--zoom-logo));
+    transform-origin: left top;
+}
+
+.zoom-global {
+    transform: scale(var(--zoom-global));
+    transform-origin: center top;
+}

@@ -1,0 +1,20 @@
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Database data (if mounted)
+db_data/
+
+# IDEs
+.vscode/
+.idea/
+.obsidian/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+.env

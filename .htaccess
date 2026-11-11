@@ -4,6 +4,12 @@
 Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    # Send plain HTTP to HTTPS. The proxy header covers hosts that terminate TLS in front of Apache;
+    # localhost is skipped so Docker development keeps working over HTTP.
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+    RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:[0-9]+)?$ [NC]
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
     # Never serve application code, SQL or tooling, even though they sit inside the web root.
     RewriteRule ^(src|sql|bin|tests|docs|dist)(/|$) - [F,L]
     RewriteRule ^robots\.txt$ public/robots.php [L]

@@ -102,12 +102,11 @@ This tool was built to solve all three problems: **roster flexibility**, **room-
 ### Start the App
 
 ```bash
-docker compose up -d
+cp .env.example .env      # then fill in DB_PASSWORD and DB_ROOT_PASSWORD (no defaults)
+docker compose up -d --build
 ```
 
-The defaults work out of the box for local use. Before exposing the app beyond your machine, copy `.env.example` to `.env` and set your own database passwords; Compose picks the file up automatically. The database port is bound to `127.0.0.1` only.
-
-Open in browser: [http://localhost:8080](http://localhost:8080)
+Open [http://localhost:8080](http://localhost:8080) and create an account. Each account sees only its own meetings. For live-editing source locally, copy `docker-compose.override.yml.example` to `docker-compose.override.yml`.
 
 ### Stop the App
 
@@ -124,28 +123,57 @@ docker compose up -d
 
 ---
 
+## Shared Hosting (PHP + MySQL)
+
+Requires PHP 8.1+ with `mysqli`, MySQL 5.7+/MariaDB 10.4+.
+
+1. Create a database and user in your host's control panel.
+2. Upload the repository. **Point the domain's document root at `public/`.** If the host can't, the root `.htaccess` routes into `public/` and blocks everything else; check `/src/db.php` and `/config.php` return 403/404.
+3. Copy `config.sample.php` to `config.php` (it lives outside `public/`) and fill in the database settings.
+4. Import `sql/schema.sql` (phpMyAdmin), or on a shell run `php bin/migrate.php` against an existing pre-login database and then `php bin/migrate.php --adopt-email=you@example.com` after registering, to assign old meetings to your account.
+5. Serve over HTTPS (cookies are marked `Secure` automatically when HTTPS is detected).
+
+### InfinityFree (and other FTP-only hosts)
+
+InfinityFree fixes the web root to `htdocs/` and has no SSH, so use the packager instead of uploading the repo:
+
+```bash
+bin/package-infinityfree.sh        # builds dist/infinityfree/{htdocs,database}
+```
+
+1. In the InfinityFree panel create a MySQL database. The host is shown there (`sqlNNN.infinityfree.com`), not `localhost`.
+2. phpMyAdmin: import `dist/infinityfree/database/schema.sql`.
+3. Edit `dist/infinityfree/htdocs/config.php` with the host, database, user and password (kept on re-runs).
+4. FTP the contents of `dist/infinityfree/htdocs/` (including the hidden `.htaccess` files) into the host's `htdocs/`.
+5. Turn on the free SSL certificate in the panel, then open the site over `https://`.
+
+`.htaccess` blocks `src/`, `config.php` and the other non-public folders, and the packager leaves `sql/`, docs and tests out. `bin/migrate.php` needs a shell, so it is for upgrading local or VPS installs only.
+
+## Tests
+
+```bash
+php tests/run.php          # unit tests for validation, grading and escaping helpers
+tests/smoke.sh             # against a running stack: auth, CSRF, cross-user isolation, escaping
+```
+
+---
+
 ## Repository Map
 
 ```
 toastmasters-timer/
-│
-├── docker-compose.yml       # Service orchestration
-├── Dockerfile               # PHP + Apache image
-│
-├── index.php                # Entry point and meeting list
-├── meeting.php              # Roster management and meeting editor
-├── timer.php                # Full-screen stopwatch and color signaling
-├── report.php               # Printable A4 timer report
-│
-├── src/
-│   ├── db.php               # Database connection and query helpers
-│   └── event_types.php      # Custom event type CRUD + AJAX handlers
-│
-├── css/                     # Application stylesheets
-├── js/                      # Stopwatch and UI logic
-│
-└── sql/
-    └── schema.sql           # Database schema and seed data
+├── docker-compose.yml, Dockerfile*   # Local/containerised run
+├── config.sample.php                 # Copy to config.php (hosting)
+├── public/                           # Document root
+│   ├── index.php, meeting.php, timer.php, report.php, cards.php
+│   ├── login.php, register.php, logout.php
+│   ├── blog.php, about.php, contact.php  # public pages (blog posts live in src/blog/)
+│   ├── api/                          # JSON endpoints (save_time, event_types)
+│   ├── css/, js/, fonts/             # Assets (fonts self-hosted)
+├── src/                              # Bootstrap, auth, CSRF, validation, grading (not web-served)
+├── sql/                              # schema.sql, migrations/, seed-demo.sql
+├── bin/migrate.php
+└── tests/
 ```
 
 ---

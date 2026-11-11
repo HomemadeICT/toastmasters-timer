@@ -1,0 +1,18 @@
+# Fallback for hosts that cannot point the document root at public/:
+# keep everything except public/ unreachable, and send requests into public/.
+# The rewrite is a no-op when the document root already is public/.
+Options -Indexes
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Never serve application code, SQL or tooling, even though they sit inside the web root.
+    RewriteRule ^(src|sql|bin|tests|docs|dist)(/|$) - [F,L]
+    RewriteRule ^robots\.txt$ public/robots.php [L]
+    RewriteRule ^sitemap\.xml$ public/sitemap.php [L]
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f [OR]
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -d
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+<FilesMatch "(^\.|\.(sql|md|php-dist|sample\.php|example|pdf)$|^config\.php$|Dockerfile.*|docker-compose.*)">
+    Require all denied
+</FilesMatch>

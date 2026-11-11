@@ -1,0 +1,2 @@
+# Application code and SQL are never served over HTTP.
+Require all denied

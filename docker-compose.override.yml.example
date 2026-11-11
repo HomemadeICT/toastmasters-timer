@@ -1,0 +1,8 @@
+# Copy to docker-compose.override.yml for local development: live-edit source, expose MySQL on localhost.
+services:
+  web:
+    volumes:
+      - .:/var/www/html
+  db:
+    ports:
+      - "127.0.0.1:3306:3306"

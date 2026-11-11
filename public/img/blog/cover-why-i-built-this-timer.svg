@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="Why I built a timer for my Toastmasters club">
+<rect width="1200" height="675" fill="#0F2D5B"/>
+<rect x="80" y="70" rx="18" width="176" height="46" fill="#ffffff"/>
+<text x="168" y="102" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="24" font-weight="600" fill="#0F2D5B">Projects</text>
+<text x="80" y="215" font-family="Inter,Arial,sans-serif" font-size="68" font-weight="600" fill="#ffffff">Why I built a timer for</text>
+<text x="80" y="297" font-family="Inter,Arial,sans-serif" font-size="68" font-weight="600" fill="#ffffff">my Toastmasters club</text>
+<text x="1120" y="620" text-anchor="end" font-family="Inter,Arial,sans-serif" font-size="24" fill="#cbd5e1">TheekMind · Toastmasters Timer</text>
+</svg>

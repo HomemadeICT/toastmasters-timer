@@ -3,13 +3,11 @@ services:
     build: .
     ports:
       - "8080:80"
-    volumes:
-      - .:/var/www/html
     environment:
       - DB_HOST=db
       - DB_NAME=${DB_NAME:-toast_timer}
       - DB_USER=${DB_USER:-toast}
-      - DB_PASSWORD=${DB_PASSWORD:-toast123}
+      - DB_PASSWORD=${DB_PASSWORD:?Set DB_PASSWORD in .env}
     depends_on:
       db:
         condition: service_healthy
@@ -23,13 +21,16 @@ services:
     environment:
       MYSQL_DATABASE: ${DB_NAME:-toast_timer}
       MYSQL_USER: ${DB_USER:-toast}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-toast123}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
-    ports:
-      - "127.0.0.1:3306:3306"
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
+    volumes:
+      - db_data:/var/lib/mysql
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 15s
+
+volumes:
+  db_data:

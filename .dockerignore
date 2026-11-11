@@ -1,0 +1,9 @@
+.git
+.obsidian
+.env
+config.php
+docs
+*.md
+*.pdf
+tests
+dist

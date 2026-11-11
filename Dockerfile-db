@@ -1,5 +1,4 @@
 FROM mysql:8.0
 
-# Copy database initialization scripts into the image so the container
-# can initialize the schema without relying on host bind mounts.
-COPY sql /docker-entrypoint-initdb.d/
+# Only the schema runs on first init; seed-demo.sql and migrations are opt-in.
+COPY sql/schema.sql /docker-entrypoint-initdb.d/schema.sql

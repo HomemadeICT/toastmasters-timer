@@ -12,6 +12,8 @@ Options -Indexes
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
     # Never serve application code, SQL or tooling, even though they sit inside the web root.
     RewriteRule ^(src|sql|bin|tests|docs|dist)(/|$) - [F,L]
+    # One security.txt for all TheekMind hosts (RFC 9116 allows the redirect).
+    RewriteRule ^\.well-known/security\.txt$ https://theekmind.com/.well-known/security.txt [R=301,L]
     RewriteRule ^robots\.txt$ public/robots.php [L]
     RewriteRule ^sitemap\.xml$ public/sitemap.php [L]
     RewriteCond %{REQUEST_URI} !^/public/
@@ -19,6 +21,6 @@ Options -Indexes
     RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -d
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
-<FilesMatch "(^\.|\.(sql|md|php-dist|sample\.php|example|pdf)$|^config\.php$|Dockerfile.*|docker-compose.*)">
+<FilesMatch "(^\.(?!well-known$)|\.(sql|md|php-dist|sample\.php|example|pdf)$|^config\.php$|Dockerfile.*|docker-compose.*)">
     Require all denied
 </FilesMatch>

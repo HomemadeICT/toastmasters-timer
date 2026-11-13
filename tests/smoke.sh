@@ -16,6 +16,10 @@ EMAIL_A="a$RANDOM$RANDOM@example.test"; EMAIL_B="b$RANDOM$RANDOM@example.test"; 
 expect "signed-out home is the landing page" "$(code "$B/")" 200
 C "$B/" | grep -q 'Create free account' && echo "ok   landing has sign-up call to action" || { echo "FAIL landing CTA"; fail=1; }
 C -I "$B/" | grep -qi '^x-robots-tag: index' && echo "ok   landing indexable" || { echo "FAIL landing robots header"; fail=1; }
+expect "robots.txt lists all four TheekMind sitemaps" "$(C "$B/robots.txt" | grep -c '^Sitemap: ')" 4
+C "$B/" | grep -q '"@id":"https://theekmind.com/#person"' && echo "ok   landing JSON-LD names the shared person" || { echo "FAIL landing JSON-LD"; fail=1; }
+C "$B/blog.php?post=$(C "$B/blog.php" | grep -oE 'blog.php\?post=[a-z0-9-]+' | head -1 | cut -d= -f2)" | grep -q '"@type":"BlogPosting"' && echo "ok   post has BlogPosting JSON-LD" || { echo "FAIL post JSON-LD"; fail=1; }
+C -I "$B/.well-known/security.txt" | grep -qi '^location: https://theekmind.com/.well-known/security.txt' && echo "ok   security.txt points at theekmind.com" || { echo "FAIL security.txt redirect"; fail=1; }
 expect "signed-out meeting page redirects" "$(code "$B/meeting.php?id=1")" 302
 expect "signed-out delete page redirects" "$(code "$B/delete_meeting.php?id=1")" 302
 for p in src/db.php sql/schema.sql config.php Dockerfile README.md .git/config; do

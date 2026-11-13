@@ -5,6 +5,13 @@ const SITE_URL = 'https://theekmind.com';
 const SITE_LINKEDIN_URL = 'https://www.linkedin.com/in/theekshana-prabodha/';
 const SITE_BLOG_URL = 'https://blogs.theekmind.com';
 const SITE_CONTACT_EMAIL = 'homemadeict@gmail.com';
+// The three TheekMind hosts are managed as one site; the registry is theekmind.com's resources/seo/sites.toml.
+const SITE_PERSON_ID = SITE_URL . '/#person';
+const SITE_SITEMAPS = [
+    'https://theekmind.com/sitemap.xml',
+    'https://blogs.theekmind.com/sitemap.xml',
+    'https://blogs.theekmind.com/sitemap-pages.xml',
+];
 
 function site_base_url(): string
 {
@@ -55,8 +62,27 @@ function site_nav(string $active = ''): void
     <?php
 }
 
+/** JSON-LD for the landing page (the app) and blog posts; both point at the shared TheekMind person. */
+function site_jsonld(string $canonical, string $url, string $title, string $description, string $img, string $published): string
+{
+    $person = ['@type' => 'Person', '@id' => SITE_PERSON_ID, 'name' => 'Theekshana Prabodha', 'url' => SITE_URL . '/'];
+    if ($canonical === '/') {
+        $node = ['@type' => 'WebApplication', 'name' => 'Toastmasters Timer', 'url' => $url, 'description' => $description,
+            'applicationCategory' => 'UtilitiesApplication', 'operatingSystem' => 'Any (web browser)', 'image' => $img,
+            'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'USD'], 'author' => $person, 'publisher' => $person];
+    } elseif ($published !== '') {
+        $node = ['@type' => 'BlogPosting', 'headline' => $title, 'description' => $description, 'url' => $url,
+            'mainEntityOfPage' => $url, 'image' => $img, 'datePublished' => $published, 'inLanguage' => 'en',
+            'author' => $person, 'publisher' => $person];
+    } else {
+        return '';
+    }
+    $json = json_encode(['@context' => 'https://schema.org'] + $node, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
+    return '<script type="application/ld+json">' . $json . '</script>';
+}
+
 /** $canonical (e.g. 'blog.php?post=x') marks a page as publicly indexable and adds canonical/Open Graph tags. */
-function site_head(string $title, string $description = '', string $canonical = '', string $image = ''): void
+function site_head(string $title, string $description = '', string $canonical = '', string $image = '', string $published = ''): void
 {
     $full = $title . ' - Toastmasters Timer by TheekMind';
     if ($canonical !== '') {
@@ -82,6 +108,7 @@ function site_head(string $title, string $description = '', string $canonical = 
     <meta property="og:url" content="<?php echo h($url); ?>">
     <meta property="og:image" content="<?php echo h($img); ?>">
     <meta name="twitter:card" content="summary_large_image">
+    <?php echo site_jsonld($canonical, $url, $title, $description, $img, $published); ?>
     <?php endif; ?>
     <?php echo favicon_links(); ?>
     <link rel="stylesheet" href="<?php echo h(asset('css/fonts.css')); ?>">

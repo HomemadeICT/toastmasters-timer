@@ -13,7 +13,8 @@ site_head(
     $post['title'] ?? 'Blogs',
     $post['excerpt'] ?? 'Guides on Toastmasters timing, role by role.',
     $post !== null ? 'blog.php?post=' . urlencode($slug) : 'blog.php',
-    $post['cover'] ?? ''
+    $post['cover'] ?? '',
+    $post['date'] ?? ''
 );
 ?>
 <body class="site">

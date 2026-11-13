@@ -1,6 +1,6 @@
 Options -Indexes
 
-<FilesMatch "^\.">
+<FilesMatch "^\.(?!well-known$)">
     Require all denied
 </FilesMatch>
 
@@ -14,6 +14,7 @@ AddType application/manifest+json .webmanifest
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteRule ^\.well-known/security\.txt$ https://theekmind.com/.well-known/security.txt [R=301,L]
     RewriteRule ^robots\.txt$ robots.php [L]
     RewriteRule ^sitemap\.xml$ sitemap.php [L]
 </IfModule>

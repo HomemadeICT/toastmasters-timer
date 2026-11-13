@@ -8,3 +8,7 @@ foreach (['index.php', 'meeting.php', 'timer.php', 'report.php', 'cards.php', 'l
     echo "Disallow: /$path\n";
 }
 echo "\nSitemap: " . site_base_url() . "/sitemap.xml\n";
+// The other TheekMind hosts' sitemaps, so a crawler that lands here finds the whole site.
+foreach (SITE_SITEMAPS as $sitemap) {
+    echo "Sitemap: $sitemap\n";
+}
